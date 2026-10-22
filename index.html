@@ -1,1 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080e16">
 
+<title>AuraVideo Studio</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">✦</div>
+    <div>
+      <b>AuraVideo</b>
+      <small>STUDIO · SIGNATURE AESTHETIC</small>
+    </div>
+  </div>
+
+  <div class="headbuttons">
+    <button id="promptOpen" class="outline">
+      ✧ Signature Prompt
+    </button>
+
+    <button id="pickPhoto" class="outline">
+      ＋ Photo
+    </button>
+
+    <button id="pickVideo" class="primary">
+      ＋ Video
+    </button>
+
+    <input id="photoFile" type="file" accept="image/*" hidden>
+    <input id="videoFile" type="file" accept="video/*" hidden>
+  </div>
+</header>
+
+<main>
+
+<section class="hero">
+  <div>
+    <div class="eyebrow">
+      YOUR PERSONAL COLOR-GRADING STUDIO
+    </div>
+
+    <h1>
+      Keep it real.<br>
+      <span>Make it aesthetic.</span>
+    </h1>
+
+    <p>
+      Natural color grading, signature night tones,
+      and realistic detail — without changing the original scene.
+    </p>
+  </div>
+
+  <div class="heroBadge">
+    ✦
+    <small>
+      100% FREE<br>
+      LOCAL EDITING
+    </small>
+  </div>
+</section>
+
+<div class="layout">
+
+<section class="panel previewPanel">
+
+  <div class="panelTitle">
+    <div>
+      <div class="eyebrow">01 / MEDIA PREVIEW</div>
+      <h2>Your canvas</h2>
+    </div>
+
+    <span class="pill" id="mediaType">VIDEO MODE</span>
+  </div>
+
+  <div id="stage" class="stage">
+
+    <div id="empty" class="empty">
+      <div class="uploadSymbol">↑</div>
+
+      <h3>Choose your media</h3>
+
+      <p>Upload a photo or video to begin editing.</p>
+
+      <button class="primary" id="chooseMedia">
+        Choose media
+      </button>
+
+      <small>
+        Media is processed locally in your browser.
+      </small>
+    </div>
+
+    <img id="photoPreview" hidden alt="Preview">
+
+    <video id="videoPreview" hidden playsinline controls></video>
+
+    <div id="compareLayer" class="compareLayer" hidden>
+      <img id="originalCompare" alt="Original comparison">
+    </div>
+
+    <div id="compareLine" class="compareLine" hidden>
+      <span>↔</span>
+    </div>
+
+  </div>
+
+  <div class="compareControls">
+    <label>
+      Original / Edited comparison
+      <input id="split" type="range" min="5" max="95" value="50">
+    </label>
+
+    <button id="compareHold" class="outline">
+      Hold to view original
+    </button>
+  </div>
+
+  <div class="mediaInfo">
+    <div>
+      <b id="fileName">No file selected</b>
+      <small id="fileInfo">Choose a photo or video</small>
+    </div>
+
+    <button class="outline" id="replaceMedia">
+      Replace
+    </button>
+  </div>
+
+</section>
+
+<section class="panel editPanel">
+
+  <div class="panelTitle">
+    <div>
+      <div class="eyebrow">02 / COLOR GRADING</div>
+      <h2>Signature presets</h2>
+    </div>
+
+    <button class="outline small" id="resetPreset">
+      Reset
+    </button>
+  </div>
+
+  <div id="presets" class="presets"></div>
+
+  <div class="adjustTitle">
+    <div>
+      <div class="eyebrow">03 / FINE TUNING</div>
+      <h2>Adjust your look</h2>
+    </div>
+
+    <button class="outline small" id="resetSliders">
+      ↺ Reset sliders
+    </button>
+  </div>
+
+  <div class="tabs">
+    <button class="active" data-tab="color">Color</button>
+    <button data-tab="light">Lighting</button>
+    <button data-tab="detail">Detail</button>
+  </div>
+
+  <div id="adjustments" class="adjustments"></div>
+
+  <div class="exportArea">
+    <div>
+      <div class="eyebrow">04 / EXPORT</div>
+      <h2>Save your edit</h2>
+      <p id="exportDescription">
+        Select media to enable export.
+      </p>
+    </div>
+
+    <button class="primary exportBtn" id="export" disabled>
+      ↓ Export free
+    </button>
+  </div>
+
+  <div id="progressWrap" hidden>
+    <div class="progressText">
+      <span id="progressLabel">Rendering…</span>
+      <span id="progressNum">0%</span>
+    </div>
+
+    <progress id="progress" max="100" value="0"></progress>
+  </div>
+
+</section>
+
+</div>
+
+<footer>
+  <span>✦ AuraVideo Studio</span>
+  <span>Local browser processing · No account required</span>
+</footer>
+
+</main>
+
+<div class="modalBackdrop" id="promptModal" hidden>
+
+  <div class="modal">
+
+    <button class="close" id="promptClose">×</button>
+
+    <div class="eyebrow">SIGNATURE AESTHETIC PROMPT</div>
+
+    <h2>Natural. Realistic. Yours.</h2>
+
+    <p class="green">✦ Bina Kisi Charges Ke · Free to use</p>
+
+    <div class="notice">
+      🔓 This is your reusable editing prompt.
+      Copy it to use with an AI image editor.
+      This browser app itself applies color adjustments locally;
+      it does not call an AI service.
+    </div>
+
+    <div class="rules">
+      <p>
+        ✓ Preserve original identity, face, skin tone, age,
+        body proportions, pose, clothing, objects, background
+        and composition.
+      </p>
+
+      <p>
+        ✓ Natural DSLR-style color grading, balanced highlights,
+        realistic shadows and textures.
+      </p>
+
+      <p>
+        ✓ Reduce excessive yellow/orange cast;
+        use neutral-to-cool tones for night scenes.
+      </p>
+
+      <p>
+        ✓ No fake bokeh, artificial HDR, smoothing,
+        added/removed objects or AI-generated appearance.
+      </p>
+    </div>
+
+    <textarea id="promptText" readonly></textarea>
+
+    <button class="primary full" id="copyPrompt">
+      Copy signature prompt
+    </button>
+
+  </div>
+
+</div>
+
+<div id="toast" role="status"></div>
+
+<script src="script.js"></script>
+
+</body>
+  </html>
