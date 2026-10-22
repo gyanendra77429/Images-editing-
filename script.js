@@ -519,3 +519,189 @@ function toast(msg) {
   clearTimeout(window.tt);
   window.tt = setTimeout(() => $('#toast').classList.remove('show'), 2400);
 }
+
+async function exportPhoto() {
+  const img = $('#photoPreview');
+
+  if (!img.naturalWidth) {
+    throw Error('Photo not loaded');
+  }
+
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+
+  applyMatrixToCanvas(c, settings, true);
+
+  await new Promise((resolve, reject) => {
+    c.toBlob(b => {
+      if (b) {
+        download(b, 'AuraVideo-Edited.jpg');
+        resolve();
+      } else {
+        reject(Error('Could not create image'));
+      }
+    }, 'image/jpeg', 0.94);
+  });
+
+  toast('Photo exported. Check your browser downloads.');
+}
+
+async function exportVideo() {
+  const v = $('#videoPreview');
+
+  if (!v.videoWidth) {
+    throw Error('Video not loaded');
+  }
+
+  if (!HTMLCanvasElement.prototype.captureStream || !window.MediaRecorder) {
+    throw Error('This browser does not support video export. Try an updated Chrome browser.');
+  }
+
+  const c = document.createElement('canvas');
+
+  c.width = v.videoWidth % 2 ? v.videoWidth - 1 : v.videoWidth;
+  c.height = v.videoHeight % 2 ? v.videoHeight - 1 : v.videoHeight;
+
+  const ctx = c.getContext('2d');
+  const stream = c.captureStream(24);
+
+  try {
+    if (v.captureStream) {
+      const audioTracks = v.captureStream().getAudioTracks();
+      audioTracks.forEach(t => stream.addTrack(t));
+    }
+  } catch (e) {}
+
+  const mime = [
+    'video/mp4;codecs=avc1.42E01E',
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm'
+  ].find(x => MediaRecorder.isTypeSupported(x));
+
+  if (!mime) {
+    throw Error('No supported video encoder was found in this browser.');
+  }
+
+  const rec = new MediaRecorder(stream, {
+    mimeType: mime,
+    videoBitsPerSecond: 4000000
+  });
+
+  const chunks = [];
+
+  $('#progressWrap').hidden = false;
+  $('#progress').value = 0;
+  $('#progressLabel').textContent = 'Rendering video…';
+
+  const end = Math.min(v.duration || 15, 15);
+  const start = performance.now();
+
+  const stopPromise = new Promise((resolve, reject) => {
+    rec.ondataavailable = e => {
+      if (e.data.size) chunks.push(e.data);
+    };
+
+    rec.onerror = () => reject(Error('Video recording failed'));
+    rec.onstop = () => resolve();
+  });
+
+  rec.start(250);
+  v.pause();
+  v.currentTime = 0;
+  await v.play();
+
+  function frame() {
+    if (rec.state !== 'recording') return;
+
+    ctx.filter = previewFilter();
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+
+    if (settings.vignette > 0) {
+      const g = ctx.createRadialGradient(
+        c.width / 2,
+        c.height / 2,
+        Math.min(c.width, c.height) * 0.2,
+        c.width / 2,
+        c.height / 2,
+        Math.max(c.width, c.height) * 0.72
+      );
+
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(
+        1,
+        `rgba(0,0,0,${settings.vignette * 0.5})`
+      );
+
+      ctx.filter = 'none';
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, c.width, c.height);
+    }
+
+    const pct = Math.min(
+      100,
+      ((v.currentTime || ((performance.now() - start) / 1000)) / end) * 100
+    );
+
+    $('#progress').value = pct;
+    $('#progressNum').textContent = Math.round(pct) + '%';
+
+    if (v.ended || v.currentTime >= end) {
+      rec.stop();
+      v.pause();
+      return;
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  frame();
+  await stopPromise;
+
+  const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+
+  download(
+    new Blob(chunks, { type: mime }),
+    `AuraVideo-Edited.${ext}`
+  );
+
+  $('#progress').value = 100;
+  $('#progressNum').textContent = '100%';
+
+  toast('Video exported. Check your browser downloads.');
+
+  v.currentTime = 0;
+  v.pause();
+}
+
+$('#export').onclick = async () => {
+  if (!file) return;
+
+  const btn = $('#export');
+  btn.disabled = true;
+  btn.textContent = 'Exporting…';
+
+  try {
+    if (kind === 'photo') {
+      await exportPhoto();
+    } else {
+      await exportVideo();
+    }
+  } catch (e) {
+    toast(e.message || 'Export failed. Try a different browser or file.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↓ Export free';
+
+    setTimeout(() => {
+      $('#progressWrap').hidden = true;
+    }, 2200);
+  }
+};
+
+renderPresets();
+renderControls();
